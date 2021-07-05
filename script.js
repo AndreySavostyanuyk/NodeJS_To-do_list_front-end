@@ -5,200 +5,175 @@ let flag = false;
 let curentIndex;
 let text;
 
-
 window.onload = async function init () {
-    input = document.getElementById('add-task');
+input = document.getElementById('add-task');
+input.addEventListener('change', updateValue);
 
-    input.addEventListener('change', updateValue);
+const resp = await fetch('http://localhost:8000/allTasks', {
+    method: 'GET'
+});
 
-    const resp = await fetch('http://localhost:8000/allTasks', {
-        method: 'GET'
-    });
+let result = await resp.json();
+allTasks = result.data;
 
-    let result = await resp.json();
-
-    allTasks = result.data;
-
-    render();
+render();
 };
 
 onClickButton = async () => {
+const resp = await fetch('http://localhost:8000/createTasks', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json;charset=utf-8',
+        'Access-Control-Alow-Origin': '*'
+    },
+    body: JSON.stringify( {
+        text: valueInput ,
+        isCheck: false
+    })
+});
 
-    const resp = await fetch('http://localhost:8000/createTasks', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json;charset=utf-8',
-            'Access-Control-Alow-Origin': '*'
-        },
-        body: JSON.stringify( {
-            text: valueInput ,
-            isCheck: false
-        })
-    });
+let result = await resp.json();
 
-    let result = await resp.json();
+allTasks = result.data;
+localStorage.setItem('tasks', JSON.stringify(allTasks));
+valueInput = "";
+input.value = "";
 
-    allTasks = result.data;
-
-    localStorage.setItem('tasks', JSON.stringify(allTasks));
-
-    valueInput = "";
-
-    input.value = "";
-
-    render();
-}
+render();
+};
 
 updateValue = (event) => {
-    valueInput = event.target.value;
-}
+valueInput = event.target.value;
+};
 
 render = async ()  => {
-    const content = document.getElementById('content-page');
+const content = document.getElementById('content-page');
 
-    while(content.firstChild) {
-        content.removeChild(content.firstChild);
-    };
+while(content.firstChild) {
+    content.removeChild(content.firstChild);
+};
   
-    allTasks.map((item, index) => {
-        const container = document.createElement('div');
+allTasks.map((item, index) => {
+const container = document.createElement('div');
+container.id = `task-${index}`;
+container.className = 'task-container';
+const checkbox = document.createElement('input');
+checkbox.type = 'checkbox';
+checkbox.checked = item.isCheck;
 
-        container.id = `task-${index}`;
-        container.className = 'task-container';
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.checked = item.isCheck;
+checkbox.onchange = function () {
+    onChangeCheckBox(index);
+}
 
-        checkbox.onchange = function () {
-            onChangeCheckBox(index);
-        }
+container.appendChild(checkbox);
+if(index === curentIndex){
+const text = document.createElement('input');
+text.type = 'text';
+text.value = item.text;
+text.id = 'inputId';
+container.appendChild(text);
+const imageClear = document.createElement('img'); 
+imageClear.src = 'images/clear.svg';
+container.appendChild(imageClear);
 
-        container.appendChild(checkbox);
+imageClear.onclick = function () {
+    EditClear(index);
+};
 
-       if(index === curentIndex){
-        const text = document.createElement('input');
-        text.type = 'text';
-        text.value = item.text;
-        text.id = 'inputId';
-        
-        container.appendChild(text);
+const imageOk = document.createElement('img');
+imageOk.src = 'images/ok.svg';
+container.appendChild(imageOk);
+imageOk.onclick = function () {
+    EditOk(index);
+};
 
-        const imageClear = document.createElement('img');
-    
-        imageClear.src = 'images/clear.svg';
-        container.appendChild(imageClear);
-
-        imageClear.onclick = function () {
-            EditClear(index);
-        };
-
-        const imageOk = document.createElement('img');
-
-        imageOk.src = 'images/ok.svg';
-        container.appendChild(imageOk);
-
-        imageOk.onclick = function () {
-            EditOk(index);
-        };
-
-       }else {
-        const text = document.createElement('p');
-
-        text.innerText = item.text;
-        text.className = item.isCheck ? 'text-task done-text' : 'text-task';
-        container.appendChild(text);
-       }
+}else {
+const text = document.createElement('p');
+text.innerText = item.text;
+text.className = item.isCheck ? 'text-task done-text' : 'text-task';
+container.appendChild(text);
+};
       
-        const imageEdit = document.createElement('img');
+const imageEdit = document.createElement('img');
+imageEdit.src = 'images/edit.svg';
+container.appendChild(imageEdit);
+imageEdit.onclick = function () {
+    EditItem(index);
+};
 
-        imageEdit.src = 'images/edit.svg';
-        container.appendChild(imageEdit);
-
-        imageEdit.onclick = function () {
-            EditItem(index);
-        };
-
-        const imageDelete = document.createElement('img');
-
-        imageDelete.src = 'images/delete.svg';
-        container.appendChild(imageDelete);
-
-        imageDelete.onclick = function () {
-            DeleteItem(index,container);
-        };
-
-        content.appendChild(container);
-    });
+const imageDelete = document.createElement('img');
+imageDelete.src = 'images/delete.svg';
+container.appendChild(imageDelete);
+imageDelete.onclick = function () {
+    DeleteItem(index,container);
+};
+content.appendChild(container);
+});
 };
 
 onChangeCheckBox = (index) => {
-    allTasks[index].isCheck = !allTasks[index].isCheck;
-    localStorage.setItem('tasks', JSON.stringify(allTasks));
+allTasks[index].isCheck = !allTasks[index].isCheck;
+localStorage.setItem('tasks', JSON.stringify(allTasks));
 
-    render();
-}
+render();
+};
 
 EditOk = async (index) => {
-    input = document.getElementById('inputId');
-    input.addEventListener('change', updateValue);
+input = document.getElementById('inputId');
+input.addEventListener('change', updateValue);
+const resp = await fetch('http://localhost:8000/editTasks', {
+method: 'PATCH',
+headers: {
+    'Content-Type': 'application/json;charset=utf-8',
+    'Access-Control-Alow-Origin': '*'
+},
+body: JSON.stringify( {
+    text: input.value,
+    isCheck: allTasks[index].isCheck
+})
+});
 
-    const resp = await fetch('http://localhost:8000/editTasks', {
-        method: 'PATCH',
-        headers: {
-            'Content-Type': 'application/json;charset=utf-8',
-            'Access-Control-Alow-Origin': '*'
-        },
-        body: JSON.stringify( {
-            text: input.value,
-            isCheck: allTasks[index].isCheck
-        })
-    });
+let result = await resp.json();
+allTasks = result.data;
+curentIndex = null;
+localStorage.setItem('tasks', JSON.stringify(allTasks));
 
-    let result = await resp.json();
-    allTasks = result.data;
-    curentIndex = null;
-    localStorage.setItem('tasks', JSON.stringify(allTasks));
-
-    render();
+render();
 };
 
 EditClear = (index) => {
-    curentIndex = null;
+curentIndex = null;
 
-    render();
+render();
 };
 
 EditItem = (index, item, container) => {
-    flag = true;
-    curentIndex = index;
+flag = true;
+curentIndex = index;
 
-    render();
+render();
 };
 
 DeleteItem = async (index, item) => {
+const resp = await fetch(`http://localhost:8000/deleteTasks?_id=${allTasks[index]._id}`, {
+method: 'DELETE'
+});
 
-    const resp = await fetch(`http://localhost:8000/deleteTasks?_id=${allTasks[index]._id}`, {
-        method: 'DELETE'
-    });
+let result = await resp.json();
+allTasks = result.data;
+localStorage.setItem('tasks', JSON.stringify(allTasks));
 
-    let result = await resp.json();
-    allTasks = result.data;
-    
-    localStorage.setItem('tasks', JSON.stringify(allTasks));
-
-    render();
+render();
 };
 
 DeleteAll = async () => {
+const resp = await fetch('http://localhost:8000/deleteAllTasks', {
+method: 'DELETE'
+});
 
-    const resp = await fetch('http://localhost:8000/deleteAllTasks', {
-        method: 'DELETE'
-    });
+let result = await resp.json();
+allTasks = result.data;
+localStorage.setItem('tasks', JSON.stringify(allTasks));
 
-    let result = await resp.json();
-    allTasks = result.data;
-
-    localStorage.setItem('tasks', JSON.stringify(allTasks));
-
-    render();
+render();
 };
