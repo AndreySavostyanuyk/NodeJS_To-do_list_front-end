@@ -13,7 +13,7 @@ const resp = await fetch('http://localhost:8000/allTasks', {
     method: 'GET'
 });
 
-let result = await resp.json();
+const result = await resp.json();
 allTasks = result.data;
 
 render();
@@ -32,7 +32,7 @@ const resp = await fetch('http://localhost:8000/createTasks', {
     })
 });
 
-let result = await resp.json();
+const result = await resp.json();
 
 allTasks = result.data;
 localStorage.setItem('tasks', JSON.stringify(allTasks));
@@ -133,7 +133,7 @@ body: JSON.stringify( {
 })
 });
 
-let result = await resp.json();
+const result = await resp.json();
 allTasks = result.data;
 curentIndex = null;
 localStorage.setItem('tasks', JSON.stringify(allTasks));
@@ -148,7 +148,6 @@ render();
 };
 
 EditItem = (index, item, container) => {
-flag = true;
 curentIndex = index;
 
 render();
@@ -158,7 +157,6 @@ DeleteItem = async (index, item) => {
 const resp = await fetch(`http://localhost:8000/deleteTasks?_id=${allTasks[index]._id}`, {
 method: 'DELETE'
 });
-
 let result = await resp.json();
 allTasks = result.data;
 localStorage.setItem('tasks', JSON.stringify(allTasks));
@@ -171,7 +169,7 @@ const resp = await fetch('http://localhost:8000/deleteAllTasks', {
 method: 'DELETE'
 });
 
-let result = await resp.json();
+const result = await resp.json();
 allTasks = result.data;
 localStorage.setItem('tasks', JSON.stringify(allTasks));
 
